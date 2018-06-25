@@ -1,0 +1,1 @@
+Avearge filter
