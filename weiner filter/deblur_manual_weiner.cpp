@@ -1,4 +1,3 @@
-//#include <boost/program_options.hpp>
 #include <iostream>
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -7,14 +6,12 @@
 
 using namespace cv;
 using namespace std;
-//namespace po = boost::program_options;
 
 Mat updateResult(Mat complex)
 {
     Mat work;
     idft(complex, work);
-//  dft(complex, work, DFT_INVERSE + DFT_SCALE);
-    Mat planes[] = {Mat::zeros(complex.size(), CV_32F), Mat::zeros(complex.size(), CV_32F)};
+.    Mat planes[] = {Mat::zeros(complex.size(), CV_32F), Mat::zeros(complex.size(), CV_32F)};
     split(work, planes);                // planes[0] = Re(DFT(I)), planes[1] = Im(DFT(I))
  
     magnitude(planes[0], planes[1], work);    // === sqrt(Re(DFT(I))^2 + Im(DFT(I))^2)
@@ -44,10 +41,7 @@ int main(int argc, char *argv[]) {
 	cout << "noise standard deviation: " << noise_stddev << "\n";
 	cout << "input file: " << input_filename << "\n";
 
-	/*if (vm.count("help")) {
-		cout << desc << "\n";
-		return 1;
-	}*/
+	
 
 	Mat I = imread(input_filename, CV_LOAD_IMAGE_GRAYSCALE);  //READ THE BLUR IMAGE
 	if(I.data==NULL){
@@ -63,56 +57,29 @@ int main(int argc, char *argv[]) {
 imshow("initial blurred image", I);
 	Mat padded = padd_image(I);
 	Mat noisy;
-	//if(vm.count("generate-noisy")){
 		noisy = with_noise(padded, noise_stddev);
-		//imwrite(output_filename, noisy);
-		//return 0;
-	//}else{
-	//	noisy = padded;
-	//}
+	
 
 	Mat sample(padded.rows, padded.cols, CV_8U);
 	resize(raw_sample, sample, sample.size());    
 	Mat spectrum = get_spectrum(sample);    //to get signal spectrum of known image 
 	Mat enhanced = wiener2(noisy, spectrum, noise_stddev);
 
-//fastNlMeansDenoising(enhanced,enhanced,20);  // Denoising the output final image again
 
-	//imwrite(output_filename, enhanced);
-
-	//if(vm.count("show")){
 		imshow("image 1", noisy);
 		imshow("image 2", enhanced);
-	//}
+	
 	waitKey();
 }
 Mat createavg(Size imsize) {
     
-	// call openCV gaussian kernel generator
-	/*double sigma = (r/SIGMA_CLIP+0.5f);
-	Mat kernelX = getGaussianKernel(2*radius+1, sigma, CV_32F);
-	Mat kernelY = getGaussianKernel(2*radius+1, sigma, CV_32F);*/
-//Mat kernel = Mat(5,5,CV_32FC1,Scalar(0.04));
-//Mat kernel = imread("psf.jpg",CV_LOAD_IMAGE_GRAYSCALE);
+	
 Mat kernel = (Mat_<double>(5,5) <<  0.039723,0.039928,0.040126,0.040068,0.040175,
 0.039709,0.039918,0.040115,0.04006,0.040164,
 0.039705,0.039914,0.040185,0.040053,0.040159,
 0.039712,0.039919,0.040117,0.040059,0.040163,
-0.039724,0.039931,0.040126,0.040071,0.040176);
+0.039724,0.039931,0.040126,0.040071,0.040176); // kernel via psf function of matlab
 
-// Mat kernel = (Mat_<double>(5,5) << 4.2005503884146651e-02,	   4.5406518659169053e-02,	   4.5503798031617484e-02	,   4.4631633834065841e-02,	   4.8617907660330625e-02,	  3.7879017155846358e-02,	   4.1096105256568434e-02,	   4.1231878114146941e-02,	   4.0390370016659342e-02	,   4.4218404291115225e-02,	 3.7435979849605658e-02,	   4.0686648854956396e-02,	   4.0921617471341334e-02,	   3.9999246678081725e-02	 ,  4.3827085400541803e-02,	3.5212979020281754e-02,	   3.8261066923625464e-02,	   3.8382260561591851e-02,	   3.7612191304491102e-02	  , 4.1400402964530743e-02,	3.2272031222225044e-02,	   3.5155528137547264e-02,	   3.5201420920913676e-02,	   3.4521039253912679e-02	   ,3.8129364532687490e-02);	
-
-
-//-------------------------------------------------------
-//Mat kernel = (Mat_<double>(10,10) <<  9.7724,	   9.8335,	   9.8752,	   9.9151,	   9.9561,	   9.9890,	   1.0002,	   9.9973,	   9.9717,	   9.9175,	9.7880,	9.8612,	   9.9064,	   9.9474,	   9.9924,	   1.0030,	   1.0048,	   1.0044,	   1.0016,	   9.9478,	9.8007,	   9.8807,	   9.9279,	   9.9709,	 1.0020,	   1.0062,	   1.0081,	   1.0076,	   1.0045,	   9.9682,	9.8144,	   9.8973,	   9.9468,	   9.9922,	   1.0045,	   1.0090,	   1.0107,	   1.0098,	   1.0063,	   9.9803,	9.8288,	   9.9135,	   9.9655,	   1.0014,	   1.0071,	   1.0117,	   1.0130,	   1.0114,	   1.0074,	   9.9860,	9.8411,	   9.9278,	   9.9829,	   1.0034,	   1.0093,	   1.0152,	   1.0145,	   1.0121,	   1.0075,	   9.9837,9.8497,	   9.9377,	   9.9961,	   1.0049,	  1.0106,	   1.0147,	   1.0147,	   1.0115,	   1.0063,	   9.9702,	9.8546,	   9.9422,	   1.0002,	   1.0055,	   1.0107,	   1.0141,	   1.0134,	  1.0095,	   1.0038,	   9.9474,	9.8570,	   9.9398,	   1.0000,	   1.0051,	   1.0097,	   1.0122,	   1.0108,	   1.0062,	   1.0003,	   9.9188,	9.8543,	   9.9260,	   9.9824,	   1.0031,	   1.0071,	   1.0087,	   1.0065,	   1.0014,	   9.9550,	   9.8840);
-
-//kernel=kernel/1000;
-//-------------------------------------------------------
-//Mat kernel = (Mat_<double>(5,5) << 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1);
-	
-// create 2d gaus
-	//Mat kernel = kernelX * kernelY.t();
-//cout<<kernel.cols<<" "<<kernel.rows;
 
 
 	int w = imsize.width-kernel.cols;
@@ -144,16 +111,12 @@ Mat wiener2(Mat final_noise, Mat image_spectrum, int noise_stddev){
 	split(complexI, planes);	// planes[0] = Re(DFT(I), planes[1] = Im(DFT(I))
 
 	Mat factor = (noise_spectrum / image_spectrum); //calculates the signal to noise ratio
-//factor=.1;
-//cout<<factor;
-//cout<<"snr"<<factor<<endl;
+
 //-----------------add H(f)
 
 
 
    Mat mask = createavg(padded.size());
-//Mat mask = imread("psf.jpg");
-//imwrite("mask.jpg",mask);		//creating the kernel which initally prduced the blurred image----------------- (imread  psf)
 shift(mask);// shifting the filter
 Mat mplane[] = {Mat_<float>(mask), Mat::zeros(mask.size(), CV_32F)};
 Mat kernelcomplex;
