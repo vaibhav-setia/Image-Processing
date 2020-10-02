@@ -7,7 +7,7 @@ rng default;
 
 I = im2double(imread('002.png'));
 PSF = fspecial('gaussian',5,5);
-V = .0001;
+V = .00001;
 BlurredNoisy = imnoise(imfilter(I,PSF),'gaussian',0,V);
 %BlurredNoisy = im2double(imread('002.png'));
 Create a weight array to specify which pixels are included in processing.
